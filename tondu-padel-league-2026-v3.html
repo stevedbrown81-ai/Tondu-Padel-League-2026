@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tondu Padel League 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1923; color: #ffffff; min-height: 100vh; }
+
+    .header { background: linear-gradient(135deg, #6b1a1a 0%, #4a0d0d 100%); padding: 28px 20px 20px; text-align: center; border-bottom: 3px solid #e74c3c; }
+    .header h1 { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .header p { color: #ffffff; margin-top: 6px; font-size: 14px; opacity: 0.8; }
+
+    .tabs { display: flex; background: #151f2b; border-bottom: 2px solid #1e2d3d; position: sticky; top: 0; z-index: 10; }
+    .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 700; color: #ffffff; transition: all 0.2s; font-size: 15px; letter-spacing: 0.3px; }
+    .tab.active { color: #e74c3c; border-bottom: 3px solid #e74c3c; background: #1a2535; }
+    .tab:hover:not(.active) { background: #1e2d3d; }
+
+    .content { display: none; padding: 20px; max-width: 860px; margin: 0 auto; }
+    .content.active { display: block; }
+
+    .section-title { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+
+    .caption { font-size: 11px; color: #6b7e90; margin: 8px 2px 14px; line-height: 1.5; }
+    .caption strong { color: #aabbcc; }
+
+    /* League Table */
+    .table-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    table { width: 100%; border-collapse: collapse; background: #1a2535; font-size: 13px; min-width: 560px; }
+    thead th { background: #3d0d0d; color: #ffffff; padding: 10px 8px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+    thead th.col-team { text-align: left; padding-left: 14px; }
+    tbody tr { border-bottom: 1px solid #1e2d3d; transition: background 0.15s; }
+    tbody tr:hover { background: #1e2d3d; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 8px; text-align: center; color: #ffffff; font-size: 13px; font-variant-numeric: tabular-nums; }
+    tbody td.col-pos { color: #aabbcc; font-weight: 700; font-size: 12px; width: 30px; }
+    tbody td.col-team { text-align: left; padding-left: 14px; font-weight: 600; color: #ffffff; max-width: 200px; }
+    tbody td.col-pts { font-weight: 800; color: #e74c3c; font-size: 15px; }
+    tbody tr.played-some:first-child { background: rgba(231,76,60,0.07); }
+    tbody tr.played-some:first-child td.col-team::after { content: ' 🥇'; font-size: 11px; }
+
+    /* Rounds */
+    .round-card { background: #1a2535; border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+    .round-header { background: #3d0d0d; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .round-header h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .round-header .week-label { font-size: 12px; color: #ffffff; font-weight: 500; opacity: 0.75; }
+    .round-toggle { color: #ffffff; font-size: 18px; transition: transform 0.2s; line-height: 1; }
+    .round-card.collapsed .round-toggle { transform: rotate(-90deg); }
+    .round-card.collapsed .round-body { display: none; }
+
+    /* Scoreboard match */
+    .match { padding: 11px 16px; border-bottom: 1px solid #111d2a; }
+    .match:last-child { border-bottom: none; }
+    .sb-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 2px 0; }
+    .sb-name { font-size: 13px; color: #cdd8e2; font-weight: 500; line-height: 1.3; }
+    .sb-name.win { color: #ffffff; font-weight: 700; }
+    .sb-sets { display: flex; gap: 7px; }
+    .sb-set { width: 18px; text-align: center; font-size: 14px; color: #6f8395; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .sb-set.win { color: #ffffff; font-weight: 800; }
+    .sb-agg { width: 22px; text-align: center; font-size: 17px; font-weight: 800; color: #e74c3c; font-variant-numeric: tabular-nums; }
+    .sb-divider { height: 1px; background: #111d2a; margin: 5px 0; opacity: 0; }
+    .match .vs-tag { font-size: 12px; color: #4a5a6a; font-weight: 700; padding: 4px 0; }
+    .match.unplayed .sb-name { color: #7c8c9b; }
+    .warn { color: #f39c12; font-size: 11px; margin-left: 6px; cursor: help; }
+
+    /* Rules */
+    .rules-section { margin-bottom: 28px; }
+    .rules-section h2 { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 28px 0 14px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .rules-section h2::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+    .rule-card { background: #1a2535; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+    .rule-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .rule-text { font-size: 13px; color: #ffffff; line-height: 1.6; }
+    .rule-text strong { color: #e74c3c; }
+
+    .footer { text-align: center; color: #4a5a6a; font-size: 12px; padding: 30px 20px; }
+
+    /* Finals Day */
+    .finals-tier { margin-bottom: 32px; }
+    .finals-tier-header { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .finals-tier-header::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+    .finals-phase-label { font-size: 11px; font-weight: 700; color: #6b7e90; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; }
+    .finals-match { background: #1a2535; border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 14px; }
+    .finals-match-num { font-size: 11px; font-weight: 700; color: #e74c3c; background: rgba(231,76,60,0.15); border-radius: 5px; padding: 3px 7px; flex-shrink: 0; white-space: nowrap; }
+    .finals-match-teams { font-size: 13px; color: #ffffff; font-weight: 600; flex: 1; }
+    .finals-match-teams span { color: #aabbcc; font-weight: 400; }
+    .finals-match-format { font-size: 11px; color: #6b7e90; flex-shrink: 0; font-weight: 600; }
+    .finals-arrow { text-align: center; color: #4a5a6a; font-size: 18px; margin: 2px 0; }
+    .finals-note { background: #131e2b; border-left: 3px solid #e74c3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 20px; font-size: 12px; color: #aabbcc; line-height: 1.6; }
+    .finals-note strong { color: #ffffff; }
+
+    @media (max-width: 580px) {
+      .sb-name { font-size: 11px; }
+      .sb-set { width: 15px; font-size: 13px; }
+      .sb-agg { font-size: 15px; }
+      .header h1 { font-size: 22px; }
+      .match { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎾 Tondu Padel League 2026</h1>
+  <p>Season 2026 &nbsp;·&nbsp; Updated 19 Jun 2026, BST</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('a')">League A</div>
+  <div class="tab" onclick="showTab('b')">League B</div>
+  <div class="tab" onclick="showTab('rules')">Rules</div>
+</div>
+
+<div id="tab-a" class="content active">
+  <div class="section-title">League Table</div>
+  <div class="table-wrap"><table id="table-a"></table></div>
+  <div class="section-title" style="margin-top:28px">Fixtures &amp; Results</div>
+  <div class="caption">Per-set games shown left to right &mdash; <strong>bold</strong> marks the set winner. The red number on the right is <strong>sets won</strong>.</div>
+  <div id="fixtures-a"></div>
+</div>
+
+<div id="tab-b" class="content">
+  <div class="section-title">League Table</div>
+  <div class="table-wrap"><table id="table-b"></table></div>
+  <div class="section-title" style="margin-top:28px">Fixtures &amp; Results</div>
+  <div class="caption">Per-set games shown left to right &mdash; <strong>bold</strong> marks the set winner. The red number on the right is <strong>sets won</strong>.</div>
+  <div id="fixtures-b"></div>
+</div>
+
+<div id="tab-rules" class="content">
+
+  <div class="rules-section">
+    <h2>Scheduling</h2>
+    <div class="rule-card">
+      <div class="rule-icon">📅</div>
+      <div class="rule-text">Pairs should follow the <strong>weekly round schedule</strong> as closely as possible. Where there are genuine scheduling difficulties, flexibility is permitted — matches may be played ahead of or behind their assigned round.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">📣</div>
+      <div class="rule-text">Teams falling behind on games played relative to the scheduled timeline will be <strong>relentlessly hounded by Matthew Hurst</strong> until the situation is resolved.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⏰</div>
+      <div class="rule-text"><strong>All matches must be completed before Monday 27th July 2026.</strong> Any match not played by this date will be recorded as a no-result.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⚖️</div>
+      <div class="rule-text">If a match cannot be played due to the fault of one team, a <strong>3–0 walkover win</strong> may be awarded to the opposing team. This must be reviewed and approved by the <strong>match committee</strong> — Sam Grabham, Liam Davies, Dean Fitzgerald, and Chris Woolls — to prevent any risk of match fixing.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Finals Day</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🏅</div>
+      <div class="rule-text">Once the league stages are complete, a <strong>Finals Day</strong> will be held to determine the overall winner. Format and dates will be confirmed closer to the time.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Match Format</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🎾</div>
+      <div class="rule-text">Matches are played over <strong>3 sets</strong> — all 3 sets must be played in full, regardless of the score after 2 sets. The pair winning the most sets wins the match.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⏱️</div>
+      <div class="rule-text">All 3 sets must be played to completion within the <strong>90 minute time slot</strong>. If the match is not finished in time, teams are responsible for booking additional court time to complete it. If one participating team doesn't want to play the additional slot, they can <strong>concede</strong>.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🏆</div>
+      <div class="rule-text"><strong>3 points</strong> are awarded for a match win. If a match ends <strong>2–1</strong>, the losing pair receives <strong>1 bonus point</strong> for taking a set.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Set &amp; Tiebreak Rules</h2>
+    <div class="rule-card">
+      <div class="rule-icon">📊</div>
+      <div class="rule-text">If a set reaches <strong>6–6</strong>, a <strong>tiebreak</strong> is played — first to <strong>7 points</strong> wins the set. The exception is the <strong>final (3rd) set</strong>, where play continues until one pair leads by <strong>2 clear games</strong> (e.g. 8–6, 9–7), as per standard tennis rules.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⚡</div>
+      <div class="rule-text">In any game, if the score reaches <strong>deuce (40–40)</strong>, a <strong>golden point</strong> is played — the next point wins the game. No advantage.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Point Rules</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🔴</div>
+      <div class="rule-text">If a player or their racket <strong>touches the net</strong> during play, they lose the point immediately.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🔴</div>
+      <div class="rule-text">If the <strong>ball hits a player</strong> (rather than their racket), the player who was hit loses the point.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🏠</div>
+      <div class="rule-text">When playing indoors, if the ball <strong>hits the ceiling</strong>, the player who hit it loses the point.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Serving</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🎯</div>
+      <div class="rule-text">When serving, the ball must be struck <strong>below waist height</strong>. An overarm or above-waist serve is a fault.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">Tondu Padel League 2026</div>
+
+<!-- ─── SCORE DATA (mirror of scores-v2.csv) ───────────────────────────────────
+     This block is the data source for the page. To update results, edit the
+     matching row in scores-v2.csv and paste the full CSV back in here (or ask
+     Claude to regenerate). Columns:
+     league,round,week_commencing,match,home_team,away_team,
+     s1_home_games,s1_away_games,s2_home_games,s2_away_games,
+     s3_home_games,s3_away_games,home_sets,away_sets
+     Games are the source of truth: when per-set games are entered, the set
+     result and points are computed from them. The home_sets/away_sets columns
+     are a fallback only for matches logged without game detail (e.g. walkovers).
+─────────────────────────────────────────────────────────────────────────────── -->
+<script type="text/csv" id="csv-data">
+league,round,week_commencing,match,home_team,away_team,s1_home_games,s1_away_games,s2_home_games,s2_away_games,s3_home_games,s3_away_games,home_sets,away_sets
+A,1,08-Jun-26,1,C. Woolls & O. Pengilly,G. Lindenburn & J. Gatt,,,,,,,,
+A,1,08-Jun-26,2,A. Warner & M. Hughes,L. Brown & J. Hurst,,,,,,,,
+A,1,08-Jun-26,3,D. Fitzgerald & M. Hayes,J. Tiley & M. Penny,6,0,6,1,6,0,3,0
+A,1,08-Jun-26,4,S. Brown & M. Jones,D. Parry & T. Woolls,6,0,6,5,6,3,3,0
+A,2,15-Jun-26,1,C. Woolls & O. Pengilly,L. Brown & J. Hurst,6,1,6,2,6,1,3,0
+A,2,15-Jun-26,2,G. Lindenburn & J. Gatt,J. Tiley & M. Penny,,,,,,,,
+A,2,15-Jun-26,3,A. Warner & M. Hughes,D. Parry & T. Woolls,,,,,,,,
+A,2,15-Jun-26,4,D. Fitzgerald & M. Hayes,S. Brown & M. Jones,6,1,7,6,6,1,3,0
+A,3,22-Jun-26,1,C. Woolls & O. Pengilly,J. Tiley & M. Penny,,,,,,,,
+A,3,22-Jun-26,2,L. Brown & J. Hurst,D. Parry & T. Woolls,,,,,,,,
+A,3,22-Jun-26,3,G. Lindenburn & J. Gatt,S. Brown & M. Jones,,,,,,,,
+A,3,22-Jun-26,4,A. Warner & M. Hughes,D. Fitzgerald & M. Hayes,,,,,,,,
+A,4,29-Jun-26,1,C. Woolls & O. Pengilly,D. Parry & T. Woolls,,,,,,,,
+A,4,29-Jun-26,2,J. Tiley & M. Penny,S. Brown & M. Jones,4,6,4,6,0,6,0,3
+A,4,29-Jun-26,3,L. Brown & J. Hurst,D. Fitzgerald & M. Hayes,,,,,,,,
+A,4,29-Jun-26,4,G. Lindenburn & J. Gatt,A. Warner & M. Hughes,,,,,,,,
+A,5,06-Jul-26,1,C. Woolls & O. Pengilly,S. Brown & M. Jones,,,,,,,,
+A,5,06-Jul-26,2,D. Parry & T. Woolls,D. Fitzgerald & M. Hayes,,,,,,,,
+A,5,06-Jul-26,3,J. Tiley & M. Penny,A. Warner & M. Hughes,,,,,,,,
+A,5,06-Jul-26,4,L. Brown & J. Hurst,G. Lindenburn & J. Gatt,,,,,,,,
+A,6,13-Jul-26,1,C. Woolls & O. Pengilly,D. Fitzgerald & M. Hayes,,,,,,,,
+A,6,13-Jul-26,2,S. Brown & M. Jones,A. Warner & M. Hughes,,,,,,,,
+A,6,13-Jul-26,3,D. Parry & T. Woolls,G. Lindenburn & J. Gatt,,,,,,,,
+A,6,13-Jul-26,4,J. Tiley & M. Penny,L. Brown & J. Hurst,,,,,,,,
+A,7,20-Jul-26,1,C. Woolls & O. Pengilly,A. Warner & M. Hughes,,,,,,,,
+A,7,20-Jul-26,2,D. Fitzgerald & M. Hayes,G. Lindenburn & J. Gatt,,,,,,,,
+A,7,20-Jul-26,3,S. Brown & M. Jones,L. Brown & J. Hurst,,,,,,,,
+A,7,20-Jul-26,4,D. Parry & T. Woolls,J. Tiley & M. Penny,,,,,,,,
+B,1,08-Jun-26,1,C. O'Neill & J. Murphy,M. Tatchell & H. Davies,6,0,4,6,6,8,1,2
+B,1,08-Jun-26,2,D. Bishop & H. Morgan,L. Woolls & S. Grabham,0,6,4,6,3,6,0,3
+B,1,08-Jun-26,3,B. Farnham & S. Brown,T. Saunders & O. Barrass,6,1,6,1,6,5,3,0
+B,1,08-Jun-26,4,T. Warwick & N. Rees,L. Davies & G. Abbers,3,6,1,6,1,6,0,3
+B,2,15-Jun-26,1,C. O'Neill & J. Murphy,L. Woolls & S. Grabham,,,,,,,,
+B,2,15-Jun-26,2,M. Tatchell & H. Davies,T. Saunders & O. Barrass,6,4,6,3,6,2,3,0
+B,2,15-Jun-26,3,D. Bishop & H. Morgan,L. Davies & G. Abbers,,,,,,,,
+B,2,15-Jun-26,4,B. Farnham & S. Brown,T. Warwick & N. Rees,6,2,6,4,2,6,2,1
+B,3,22-Jun-26,1,C. O'Neill & J. Murphy,T. Saunders & O. Barrass,,,,,,,,
+B,3,22-Jun-26,2,L. Woolls & S. Grabham,L. Davies & G. Abbers,6,1,6,3,3,6,2,1
+B,3,22-Jun-26,3,M. Tatchell & H. Davies,T. Warwick & N. Rees,,,,,,,,
+B,3,22-Jun-26,4,D. Bishop & H. Morgan,B. Farnham & S. Brown,,,,,,,,
+B,4,29-Jun-26,1,C. O'Neill & J. Murphy,L. Davies & G. Abbers,,,,,,,,
+B,4,29-Jun-26,2,T. Saunders & O. Barrass,T. Warwick & N. Rees,,,,,,,,
+B,4,29-Jun-26,3,L. Woolls & S. Grabham,B. Farnham & S. Brown,,,,,,,,
+B,4,29-Jun-26,4,M. Tatchell & H. Davies,D. Bishop & H. Morgan,,,,,,,,
+B,5,06-Jul-26,1,C. O'Neill & J. Murphy,T. Warwick & N. Rees,,,,,,,,
+B,5,06-Jul-26,2,L. Davies & G. Abbers,B. Farnham & S. Brown,,,,,,,,
+B,5,06-Jul-26,3,T. Saunders & O. Barrass,D. Bishop & H. Morgan,,,,,,,,
+B,5,06-Jul-26,4,L. Woolls & S. Grabham,M. Tatchell & H. Davies,,,,,,,,
+B,6,13-Jul-26,1,C. O'Neill & J. Murphy,B. Farnham & S. Brown,,,,,,,,
+B,6,13-Jul-26,2,T. Warwick & N. Rees,D. Bishop & H. Morgan,,,,,,,,
+B,6,13-Jul-26,3,L. Davies & G. Abbers,M. Tatchell & H. Davies,,,,,,,,
+B,6,13-Jul-26,4,T. Saunders & O. Barrass,L. Woolls & S. Grabham,,,,,,,,
+B,7,20-Jul-26,1,C. O'Neill & J. Murphy,D. Bishop & H. Morgan,,,,,,,,
+B,7,20-Jul-26,2,B. Farnham & S. Brown,M. Tatchell & H. Davies,,,,,,,,
+B,7,20-Jul-26,3,T. Warwick & N. Rees,L. Woolls & S. Grabham,,,,,,,,
+B,7,20-Jul-26,4,L. Davies & G. Abbers,T. Saunders & O. Barrass,,,,,,,,
+</script>
+
+<script>
+// ─── Parse embedded CSV ───────────────────────────────────────────────────────
+function parseCSV() {
+  const raw = document.getElementById('csv-data').textContent.trim();
+  const lines = raw.split('\n').filter(l => l.trim() !== '');
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    const cells = line.split(',');
+    const o = {};
+    headers.forEach((h, i) => o[h.trim()] = (cells[i] || '').trim());
+    return o;
+  });
+}
+
+const ROWS = parseCSV();
+
+// Format "08-Jun-26" -> "w/c 8 Jun 2026"
+function weekLabel(w) {
+  const m = /^(\d{2})-([A-Za-z]{3})-(\d{2})$/.exec(w);
+  if (!m) return w;
+  return `w/c ${parseInt(m[1], 10)} ${m[2]} 20${m[3]}`;
+}
+
+const num = v => (v === '' || v == null) ? null : parseInt(v, 10);
+
+// Resolve a match row into a structured result.
+function resolveMatch(r) {
+  const sets = [
+    [num(r.s1_home_games), num(r.s1_away_games)],
+    [num(r.s2_home_games), num(r.s2_away_games)],
+    [num(r.s3_home_games), num(r.s3_away_games)]
+  ].filter(s => s[0] !== null && s[1] !== null);
+
+  const hasGames = sets.length > 0;
+  const totH = num(r.home_sets), totA = num(r.away_sets);
+  const hasTotals = totH !== null && totA !== null;
+
+  let setsH = 0, setsA = 0, gamesH = 0, gamesA = 0;
+  if (hasGames) {
+    sets.forEach(([h, a]) => {
+      gamesH += h; gamesA += a;
+      if (h > a) setsH++; else if (a > h) setsA++;
+    });
+  } else if (hasTotals) {
+    setsH = totH; setsA = totA;
+  }
+
+  const played = hasGames ? (setsH + setsA >= 2) : hasTotals;
+
+  // Flag if entered totals disagree with games-derived sets
+  const mismatch = hasGames && hasTotals && (totH !== setsH || totA !== setsA);
+
+  return { sets, hasGames, played, setsH, setsA, gamesH, gamesA, mismatch };
+}
+
+// ─── Build league structures from CSV ─────────────────────────────────────────
+function buildLeague(letter) {
+  const rows = ROWS.filter(r => r.league.toUpperCase() === letter.toUpperCase());
+  const teams = [];
+  rows.forEach(r => {
+    [r.home_team, r.away_team].forEach(t => { if (!teams.includes(t)) teams.push(t); });
+  });
+  const roundsMap = {};
+  rows.forEach(r => {
+    const ri = parseInt(r.round, 10);
+    (roundsMap[ri] = roundsMap[ri] || { round: ri, week: r.week_commencing, matches: [] }).matches.push(r);
+  });
+  const rounds = Object.values(roundsMap).sort((a, b) => a.round - b.round);
+  rounds.forEach(rd => rd.matches.sort((a, b) => parseInt(a.match, 10) - parseInt(b.match, 10)));
+  return { teams, rounds, rows };
+}
+
+const LEAGUES = { a: buildLeague('A'), b: buildLeague('B') };
+
+// ─── Standings ────────────────────────────────────────────────────────────────
+function calcTable(key) {
+  const L = LEAGUES[key];
+  const stats = {};
+  L.teams.forEach(t => stats[t] = { team: t, P: 0, W: 0, L: 0, BP: 0, SF: 0, SA: 0, GF: 0, GA: 0, Pts: 0 });
+
+  L.rows.forEach(r => {
+    const m = resolveMatch(r);
+    if (!m.played) return;
+    const h = r.home_team, a = r.away_team;
+    stats[h].P++; stats[a].P++;
+    stats[h].SF += m.setsH; stats[h].SA += m.setsA;
+    stats[a].SF += m.setsA; stats[a].SA += m.setsH;
+    stats[h].GF += m.gamesH; stats[h].GA += m.gamesA;
+    stats[a].GF += m.gamesA; stats[a].GA += m.gamesH;
+
+    if (m.setsH > m.setsA) {
+      stats[h].W++; stats[h].Pts += 3; stats[a].L++;
+      if (m.setsA === 1) { stats[a].Pts += 1; stats[a].BP++; }
+    } else {
+      stats[a].W++; stats[a].Pts += 3; stats[h].L++;
+      if (m.setsH === 1) { stats[h].Pts += 1; stats[h].BP++; }
+    }
+  });
+
+  return Object.values(stats).sort((x, y) => {
+    if (y.Pts !== x.Pts) return y.Pts - x.Pts;
+    const xSD = x.SF - x.SA, ySD = y.SF - y.SA;
+    if (ySD !== xSD) return ySD - xSD;
+    const xGD = x.GF - x.GA, yGD = y.GF - y.GA;
+    if (yGD !== xGD) return yGD - xGD;
+    if (y.GF !== x.GF) return y.GF - x.GF;
+    return x.team.localeCompare(y.team);
+  });
+}
+
+function renderTable(key) {
+  const rows = calcTable(key);
+  const anyPlayed = rows.some(r => r.P > 0);
+  document.getElementById(`table-${key}`).innerHTML = `
+    <thead><tr>
+      <th class="col-pos">#</th>
+      <th class="col-team">Team</th>
+      <th title="Played">P</th><th title="Won">W</th><th title="Lost">L</th>
+      <th title="Losing bonus points">BP</th>
+      <th title="Sets for">SF</th><th title="Sets against">SA</th><th title="Set difference">SD</th>
+      <th title="Game difference">GD</th>
+      <th class="col-pts">Pts</th>
+    </tr></thead>
+    <tbody>
+      ${rows.map((r, i) => `
+        <tr class="${anyPlayed ? 'played-some' : ''}">
+          <td class="col-pos">${i + 1}</td>
+          <td class="col-team">${r.team}</td>
+          <td>${r.P}</td><td>${r.W}</td><td>${r.L}</td><td>${r.BP}</td>
+          <td>${r.SF}</td><td>${r.SA}</td><td>${fmtDiff(r.SF - r.SA)}</td>
+          <td>${fmtDiff(r.GF - r.GA)}</td>
+          <td class="col-pts">${r.Pts}</td>
+        </tr>`).join('')}
+    </tbody>`;
+}
+
+function fmtDiff(n) { return n > 0 ? `+${n}` : `${n}`; }
+
+// ─── Fixtures (scoreboard) ────────────────────────────────────────────────────
+function teamRow(name, sets, side, isWinner, agg, showAgg) {
+  const cells = [0, 1, 2].map(i => {
+    if (!sets[i]) return `<span class="sb-set"></span>`;
+    const my = side === 'home' ? sets[i][0] : sets[i][1];
+    const opp = side === 'home' ? sets[i][1] : sets[i][0];
+    return `<span class="sb-set ${my > opp ? 'win' : ''}">${my}</span>`;
+  }).join('');
+  return `
+    <div class="sb-row">
+      <div class="sb-name ${isWinner ? 'win' : ''}">${name}</div>
+      <div class="sb-sets">${cells}</div>
+      <div class="sb-agg">${showAgg ? agg : ''}</div>
+    </div>`;
+}
+
+function renderFixtures(key) {
+  const L = LEAGUES[key];
+  const container = document.getElementById(`fixtures-${key}`);
+  container.innerHTML = '';
+
+  L.rounds.forEach(rd => {
+    const matchesHTML = rd.matches.map(r => {
+      const m = resolveMatch(r);
+      const warn = m.mismatch ? `<span class="warn" title="Entered set totals don't match the per-set games — page shows the games result">⚠</span>` : '';
+
+      if (!m.played) {
+        return `
+          <div class="match unplayed">
+            <div class="sb-row"><div class="sb-name">${r.home_team}</div><div></div><div></div></div>
+            <div class="vs-tag">vs</div>
+            <div class="sb-row"><div class="sb-name">${r.away_team}</div><div></div><div></div></div>
+          </div>`;
+      }
+
+      const homeWon = m.setsH > m.setsA;
+      return `
+        <div class="match">
+          ${teamRow(r.home_team + warn, m.sets, 'home', homeWon, m.setsH, true)}
+          ${teamRow(r.away_team, m.sets, 'away', !homeWon, m.setsA, true)}
+        </div>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.className = 'round-card';
+    card.id = `round-${key}-${rd.round}`;
+    card.innerHTML = `
+      <div class="round-header" onclick="toggleRound('${key}',${rd.round})">
+        <h3>Round ${rd.round}</h3>
+        <span class="week-label">${weekLabel(rd.week)}</span>
+        <span class="round-toggle">▾</span>
+      </div>
+      <div class="round-body">${matchesHTML}</div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleRound(key, ri) {
+  document.getElementById(`round-${key}-${ri}`).classList.toggle('collapsed');
+}
+
+function showTab(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="showTab('${key}')"]`).classList.add('active');
+  document.getElementById(`tab-${key}`).classList.add('active');
+}
+
+['a', 'b'].forEach(key => { renderFixtures(key); renderTable(key); });
+</script>
+</body>
+</html>
