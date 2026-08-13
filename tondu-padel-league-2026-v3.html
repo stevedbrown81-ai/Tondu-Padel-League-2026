@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tondu Padel League 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1923; color: #ffffff; min-height: 100vh; }
+
+    .header { background: linear-gradient(135deg, #6b1a1a 0%, #4a0d0d 100%); padding: 28px 20px 20px; text-align: center; border-bottom: 3px solid #e74c3c; }
+    .header h1 { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .header p { color: #ffffff; margin-top: 6px; font-size: 14px; opacity: 0.8; }
+
+    .tabs { display: flex; background: #151f2b; border-bottom: 2px solid #1e2d3d; position: sticky; top: 0; z-index: 10; }
+    .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: 700; color: #ffffff; transition: all 0.2s; font-size: 15px; letter-spacing: 0.3px; }
+    .tab.active { color: #e74c3c; border-bottom: 3px solid #e74c3c; background: #1a2535; }
+    .tab:hover:not(.active) { background: #1e2d3d; }
+
+    .content { display: none; padding: 20px; max-width: 860px; margin: 0 auto; }
+    .content.active { display: block; }
+
+    .section-title { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 24px 0 10px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+
+    .caption { font-size: 11px; color: #6b7e90; margin: 8px 2px 14px; line-height: 1.5; }
+    .caption strong { color: #aabbcc; }
+
+    /* League Table */
+    .table-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    table { width: 100%; border-collapse: collapse; background: #1a2535; font-size: 13px; min-width: 560px; }
+    thead th { background: #3d0d0d; color: #ffffff; padding: 10px 8px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+    thead th.col-team { text-align: left; padding-left: 14px; }
+    tbody tr { border-bottom: 1px solid #1e2d3d; transition: background 0.15s; }
+    tbody tr:hover { background: #1e2d3d; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 8px; text-align: center; color: #ffffff; font-size: 13px; font-variant-numeric: tabular-nums; }
+    tbody td.col-pos { color: #aabbcc; font-weight: 700; font-size: 12px; width: 30px; }
+    tbody td.col-team { text-align: left; padding-left: 14px; font-weight: 600; color: #ffffff; max-width: 200px; }
+    tbody td.col-pts { font-weight: 800; color: #e74c3c; font-size: 15px; }
+    tbody tr.played-some:first-child { background: rgba(231,76,60,0.07); }
+    tbody tr.played-some:first-child td.col-team::after { content: ' 🥇'; font-size: 11px; }
+
+    /* Rounds */
+    .round-card { background: #1a2535; border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+    .round-header { background: #3d0d0d; padding: 13px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+    .round-header h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .round-header .week-label { font-size: 12px; color: #ffffff; font-weight: 500; opacity: 0.75; }
+    .round-toggle { color: #ffffff; font-size: 18px; transition: transform 0.2s; line-height: 1; }
+    .round-card.collapsed .round-toggle { transform: rotate(-90deg); }
+    .round-card.collapsed .round-body { display: none; }
+
+    /* Scoreboard match */
+    .match { padding: 11px 16px; border-bottom: 1px solid #111d2a; }
+    .match:last-child { border-bottom: none; }
+    .sb-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 2px 0; }
+    .sb-name { font-size: 13px; color: #cdd8e2; font-weight: 500; line-height: 1.3; }
+    .sb-name.win { color: #ffffff; font-weight: 700; }
+    .sb-sets { display: flex; gap: 7px; }
+    .sb-set { width: 18px; text-align: center; font-size: 14px; color: #6f8395; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .sb-set.win { color: #ffffff; font-weight: 800; }
+    .sb-agg { width: 22px; text-align: center; font-size: 17px; font-weight: 800; color: #e74c3c; font-variant-numeric: tabular-nums; }
+    .sb-divider { height: 1px; background: #111d2a; margin: 5px 0; opacity: 0; }
+    .match .vs-tag { font-size: 12px; color: #4a5a6a; font-weight: 700; padding: 4px 0; }
+    .match.unplayed .sb-name { color: #7c8c9b; }
+    .warn { color: #f39c12; font-size: 11px; margin-left: 6px; cursor: help; }
+
+    /* Rules */
+    .rules-section { margin-bottom: 28px; }
+    .rules-section h2 { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 28px 0 14px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .rules-section h2::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+    .rule-card { background: #1a2535; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+    .rule-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .rule-text { font-size: 13px; color: #ffffff; line-height: 1.6; }
+    .rule-text strong { color: #e74c3c; }
+
+    .footer { text-align: center; color: #4a5a6a; font-size: 12px; padding: 30px 20px; }
+
+    /* Finals Day */
+    .finals-tier { margin-bottom: 32px; }
+    .finals-tier-header { font-size: 13px; font-weight: 700; color: #e74c3c; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+    .finals-tier-header::before { content: ''; display: inline-block; width: 3px; height: 16px; background: #e74c3c; border-radius: 2px; }
+    .finals-phase-label { font-size: 11px; font-weight: 700; color: #6b7e90; text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; }
+    .finals-match { background: #1a2535; border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 14px; }
+    .finals-match-num { font-size: 11px; font-weight: 700; color: #e74c3c; background: rgba(231,76,60,0.15); border-radius: 5px; padding: 3px 7px; flex-shrink: 0; white-space: nowrap; }
+    .finals-match-teams { font-size: 13px; color: #ffffff; font-weight: 600; flex: 1; }
+    .finals-match-teams span { color: #aabbcc; font-weight: 400; }
+    .finals-match-format { font-size: 11px; color: #6b7e90; flex-shrink: 0; font-weight: 600; }
+    .finals-arrow { text-align: center; color: #4a5a6a; font-size: 18px; margin: 2px 0; }
+    .finals-note { background: #131e2b; border-left: 3px solid #e74c3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-top: 20px; font-size: 12px; color: #aabbcc; line-height: 1.6; }
+    .finals-note strong { color: #ffffff; }
+
+    /* Browns Bets */
+    .bets-intro { background: #131e2b; border-left: 3px solid #e74c3c; border-radius: 0 8px 8px 0; padding: 14px 18px; font-size: 13px; color: #aabbcc; line-height: 1.7; margin-bottom: 22px; }
+    .bets-intro strong { color: #ffffff; }
+    .odds-card { background: #1a2535; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.25); display: flex; align-items: flex-start; gap: 14px; }
+    .odds-card.steve-card { border-left: 3px solid #e74c3c; }
+    .odds-badge-wrap { flex-shrink: 0; text-align: center; min-width: 58px; }
+    .odds-badge { font-size: 18px; font-weight: 800; padding: 6px 8px; border-radius: 8px; display: inline-block; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+    .odds-badge.fav { color: #2ecc71; background: rgba(46,204,113,0.12); }
+    .odds-badge.mid { color: #f39c12; background: rgba(243,156,18,0.12); }
+    .odds-badge.lng { color: #e67e22; background: rgba(230,126,34,0.10); }
+    .odds-badge.dead { color: #4a5a6a; background: rgba(74,90,106,0.12); }
+    .odds-badge-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; color: #4a5a6a; }
+    .odds-badge-label.fav { color: #2ecc71; }
+    .odds-main { flex: 1; min-width: 0; }
+    .odds-team-name { font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 3px; }
+    .odds-meta { font-size: 11px; color: #6b7e90; margin-bottom: 8px; }
+    .odds-prob-bar { height: 4px; background: #111d2a; border-radius: 2px; margin-bottom: 9px; overflow: hidden; }
+    .odds-prob-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    .odds-prob-fill.fav { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+    .odds-prob-fill.mid { background: linear-gradient(90deg, #e67e22, #f39c12); }
+    .odds-comment { font-size: 12px; color: #8a9faf; line-height: 1.55; }
+    .steve-index { background: #1a2535; border: 1px solid #e74c3c; border-radius: 10px; padding: 16px 20px; margin: 24px 0; text-align: center; box-shadow: 0 2px 16px rgba(231,76,60,0.15); }
+    .steve-index-title { font-size: 13px; font-weight: 700; color: #e74c3c; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px; }
+    .steve-index-body { display: flex; justify-content: center; gap: 32px; margin-bottom: 10px; }
+    .steve-index-item { text-align: center; }
+    .steve-index-league { font-size: 11px; color: #6b7e90; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .steve-index-odds { font-size: 26px; font-weight: 800; }
+    .steve-index-odds.bad { color: #4a5a6a; }
+    .steve-index-odds.good { color: #2ecc71; }
+    .steve-index-tagline { font-size: 12px; color: #6b7e90; font-style: italic; }
+    .methodology-note { background: #131e2b; border-radius: 8px; padding: 12px 16px; font-size: 11px; color: #4a5a6a; line-height: 1.6; margin-top: 24px; }
+
+    @media (max-width: 580px) {
+      .sb-name { font-size: 11px; }
+      .sb-set { width: 15px; font-size: 13px; }
+      .sb-agg { font-size: 15px; }
+      .header h1 { font-size: 22px; }
+      .match { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎾 Tondu Padel League 2026</h1>
+  <p>Season 2026 &nbsp;·&nbsp; Updated 13 Aug 2026 BST</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('a')">League A</div>
+  <div class="tab" onclick="showTab('b')">League B</div>
+  <div class="tab" onclick="showTab('rules')">Rules</div>
+  <div class="tab" onclick="showTab('bets')">Browns Bets</div>
+</div>
+
+<div id="tab-a" class="content active">
+  <div class="section-title">League Table</div>
+  <div class="table-wrap"><table id="table-a"></table></div>
+  <div class="section-title" style="margin-top:28px">Fixtures &amp; Results</div>
+  <div class="caption">Per-set games shown left to right &mdash; <strong>bold</strong> marks the set winner. The red number on the right is <strong>sets won</strong>.</div>
+  <div id="fixtures-a"></div>
+</div>
+
+<div id="tab-b" class="content">
+  <div class="section-title">League Table</div>
+  <div class="table-wrap"><table id="table-b"></table></div>
+  <div class="section-title" style="margin-top:28px">Fixtures &amp; Results</div>
+  <div class="caption">Per-set games shown left to right &mdash; <strong>bold</strong> marks the set winner. The red number on the right is <strong>sets won</strong>.</div>
+  <div id="fixtures-b"></div>
+</div>
+
+<div id="tab-rules" class="content">
+
+  <div class="rules-section">
+    <h2>Scheduling</h2>
+    <div class="rule-card">
+      <div class="rule-icon">📅</div>
+      <div class="rule-text">Pairs should follow the <strong>weekly round schedule</strong> as closely as possible. Where there are genuine scheduling difficulties, flexibility is permitted — matches may be played ahead of or behind their assigned round.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">📣</div>
+      <div class="rule-text">Teams falling behind on games played relative to the scheduled timeline will be <strong>relentlessly hounded by Matthew Hurst</strong> until the situation is resolved.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⏰</div>
+      <div class="rule-text"><strong>All matches must be completed before Monday 27th July 2026.</strong> Any match not played by this date will be recorded as a no-result.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⚖️</div>
+      <div class="rule-text">If a match cannot be played due to the fault of one team, a <strong>3–0 walkover win</strong> may be awarded to the opposing team. This must be reviewed and approved by the <strong>match committee</strong> — Sam Grabham, Liam Davies, Dean Fitzgerald, and Chris Woolls — to prevent any risk of match fixing.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Finals Day</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🏅</div>
+      <div class="rule-text">Once the league stages are complete, a <strong>Finals Day</strong> will be held to determine the overall winner. Format and dates will be confirmed closer to the time.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Match Format</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🎾</div>
+      <div class="rule-text">Matches are played over <strong>3 sets</strong> — all 3 sets must be played in full, regardless of the score after 2 sets. The pair winning the most sets wins the match.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⏱️</div>
+      <div class="rule-text">All 3 sets must be played to completion within the <strong>90 minute time slot</strong>. If the match is not finished in time, teams are responsible for booking additional court time to complete it. If one participating team doesn't want to play the additional slot, they can <strong>concede</strong>.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🏆</div>
+      <div class="rule-text"><strong>3 points</strong> are awarded for a match win. If a match ends <strong>2–1</strong>, the losing pair receives <strong>1 bonus point</strong> for taking a set.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Set &amp; Tiebreak Rules</h2>
+    <div class="rule-card">
+      <div class="rule-icon">📊</div>
+      <div class="rule-text">If a set reaches <strong>6–6</strong>, a <strong>tiebreak</strong> is played — first to <strong>7 points</strong> wins the set. The exception is the <strong>final (3rd) set</strong>, where play continues until one pair leads by <strong>2 clear games</strong> (e.g. 8–6, 9–7), as per standard tennis rules.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">⚡</div>
+      <div class="rule-text">In any game, if the score reaches <strong>deuce (40–40)</strong>, a <strong>golden point</strong> is played — the next point wins the game. No advantage.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Point Rules</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🔴</div>
+      <div class="rule-text">If a player or their racket <strong>touches the net</strong> during play, they lose the point immediately.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🔴</div>
+      <div class="rule-text">If the <strong>ball hits a player</strong> (rather than their racket), the player who was hit loses the point.</div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-icon">🏠</div>
+      <div class="rule-text">When playing indoors, if the ball <strong>hits the ceiling</strong>, the player who hit it loses the point.</div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <h2>Serving</h2>
+    <div class="rule-card">
+      <div class="rule-icon">🎯</div>
+      <div class="rule-text">When serving, the ball must be struck <strong>below waist height</strong>. An overarm or above-waist serve is a fault.</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="tab-bets" class="content">
+
+  <div class="bets-intro">
+    50,000 simulated seasons. Every unplayed fixture resolved probabilistically from current form, weighted by games played, then the whole table re-sorted on the league&rsquo;s own tie-breaks. What comes out is a projected finishing position rather than a title price. <strong>League A is complete</strong> &mdash; all eight places settled, Lindenburn &amp; Gatt champions with a perfect record. League B has one match outstanding, O'Neill &amp; Murphy against Farnham &amp; Brown, and it is the only thing on this page the model still cannot call. <strong>For entertainment only.</strong> Browns Bets accepts no liability for losses, damaged egos, or misplaced confidence.
+  </div>
+
+  <div class="section-title">League A</div>
+
+  <!-- 1. G. Lindenburn & J. Gatt -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge fav">1st</div>
+      <div class="odds-badge-label fav">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">G. Lindenburn &amp; J. Gatt</div>
+      <div class="odds-meta">21 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 1st in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill fav" style="width:100.0%"></div></div>
+      <div class="odds-comment">Champions of League A, and champions without a blemish. Parry &amp; Woolls were beaten 6-0 6-1 6-1 to close the season, and the final line reads: played seven, won seven, twenty-one sets won, none conceded. One hundred and twenty-seven games for, thirty-two against, a game difference of plus ninety-five and twenty-one points from a possible twenty-one. No other team in either division managed a perfect season, and nobody finished closer than three points. Across seven matches only one set was even competitive: the 7-6 against Fitzgerald &amp; Hayes, the single game that separated this record from a procession. The two that mattered were dispatched in the same fortnight: Woolls &amp; Pengilly 6-1 6-3 6-2, and then Fitzgerald &amp; Hayes 6-3 7-6 6-4 in the R7 decider, taking the second set on a tiebreak against a side that had not lost a set all year either. First at 100.0%. In June this card described a team that was unbeaten and largely unmeasured, and wondered what the fixtures would make of them. The answer, in the end, was nothing at all.</div>
+    </div>
+  </div>
+
+  <!-- 2. D. Fitzgerald & M. Hayes -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge fav">2nd</div>
+      <div class="odds-badge-label fav">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">D. Fitzgerald &amp; M. Hayes</div>
+      <div class="odds-meta">18 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 2nd in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill fav" style="width:100.0%"></div></div>
+      <div class="odds-comment">Second, confirmed, and with no dishonour in it. Seven played, six won, and the single defeat was to a team that finished the season without conceding a set to anybody &mdash; 3-6 6-7 4-6 in the R7 decider, the middle set lost on a tiebreak, which remains the closest anyone came to taking a set off the champions all year. Eighteen points, plus fifteen on sets, and a ledger that would have won most seasons: Tiley &amp; Penny 6-0 6-1 6-0, S. Brown &amp; Jones 6-1 7-6 6-1, Warner &amp; Hughes 6-0 7-5 6-2, L. Brown &amp; Hurst 7-6 6-2 7-6, Parry &amp; Woolls 6-2 6-0 6-4 and Woolls &amp; Pengilly 6-2 6-0 6-3. Second at 100.0%. Beaten by the only perfect record either division produced, and by nobody else.</div>
+    </div>
+  </div>
+
+  <!-- 3. C. Woolls & O. Pengilly -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">3rd</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">C. Woolls &amp; O. Pengilly</div>
+      <div class="odds-meta">13 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 3rd in 100.0% of sims &nbsp;·&nbsp; <em>M. Hurst replaces O. Pengilly (inj.)</em></div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:100.0%"></div></div>
+      <div class="odds-comment">A new partnership and a hard introduction. O. Pengilly is out injured and M. Hurst takes his place &mdash; not to be confused with the J. Hurst of L. Brown &amp; Hurst &mdash; and the pairing has now lost both its outings: 2-6 3-6 6-4 to Parry &amp; Woolls, with a bonus point salvaged, and then 2-6 0-6 3-6 to Fitzgerald &amp; Hayes. Three defeats in the last three matches, having lost none in the first four. Thirteen points from seven, season complete, third place mathematically settled at 100.0% &mdash; the four wins over L. Brown &amp; Hurst (6-1 6-2 6-1), Tiley &amp; Penny (6-1 6-0 6-4), S. Brown &amp; Jones (7-5 6-2 7-5) and Warner &amp; Hughes (6-1 6-1 6-1) were enough to hold it comfortably. Browns Bets notes, without drawing conclusions, that the model was never able to price the change of personnel and did not need to: third was already beyond reach in either direction.</div>
+    </div>
+  </div>
+
+  <!-- 4. S. Brown & M. Jones -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">4th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">S. Brown &amp; M. Jones</div>
+      <div class="odds-meta">12 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 4th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:100.0%"></div></div>
+      <div class="odds-comment">A tidy finish to a season that had stopped promising much: 6-1 6-4 6-1 over Warner &amp; Hughes, twelve points from seven, and fourth place locked at 100.0%. The heavy 0-6 1-6 1-6 to Lindenburn &amp; Gatt looks less like an aberration with every passing week &mdash; that team has since gone on to win the division without conceding a set &mdash; and the other two defeats, to Fitzgerald &amp; Hayes and Woolls &amp; Pengilly, were to the sides that finished second and third. Losing only to the top three is a respectable way to finish fourth. Four wins, no bonus points anywhere, and a set difference back into the black at plus one. Nothing left to play, and for once nothing left to worry about.</div>
+    </div>
+  </div>
+
+  <!-- 5. L. Brown & J. Hurst -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">5th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">L. Brown &amp; J. Hurst</div>
+      <div class="odds-meta">10 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 5th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:100.0%"></div></div>
+      <div class="odds-comment">Fifth, confirmed. Tiley &amp; Penny's win over Parry &amp; Woolls had already halted the only side capable of climbing past, and Parry's 0-3 to the champions has now put it beyond doubt: ten points, seven played, fifth at 100.0%. After three consecutive updates spent slipping a place without touching a ball, this team finished by gaining one the same way. The record: a 2-1 over Tiley &amp; Penny (6-1 3-6 6-2), a fine 2-1 over Parry &amp; Woolls (1-6 7-6 9-7), a win over Warner &amp; Hughes, and four defeats including tiebreak near-misses against Fitzgerald &amp; Hayes. Mid-table, as the shape always suggested &mdash; and the right end of it, settled by results elsewhere, which is how most of this season went for them.</div>
+    </div>
+  </div>
+
+  <!-- 6. D. Parry & T. Woolls -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">6th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">D. Parry &amp; T. Woolls</div>
+      <div class="odds-meta">8 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 6th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">The last match of League A, and it was over quickly: 0-6 1-6 1-6 to Lindenburn &amp; Gatt, two games taken from twenty, handing the champions the perfect record on the way out. Eight points from seven, sixth at 100.0%. It closes a fortnight that promised a good deal more &mdash; the 6-2 6-3 4-6 win over Woolls &amp; Pengilly was the best afternoon of their year and briefly had them projected fifth &mdash; before the 6-3 4-6 5-7 to Tiley &amp; Penny, a set up and beaten, settled sixth the wrong way. Add a 3-0 over Warner &amp; Hughes and bonus points from the 1-2s to L. Brown &amp; Hurst (6-1 6-7 7-9) and Tiley. Two of the four defeats came by a single set; the two that did not came against the top two.</div>
+    </div>
+  </div>
+
+  <!-- 7. J. Tiley & M. Penny -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">7th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">J. Tiley &amp; M. Penny</div>
+      <div class="odds-meta">7 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 7th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">Two wins now, and the second was worth more than the first. Having taken the wooden-spoon decider 6-3 6-3 6-2, Tiley &amp; Penny closed their season by beating Parry &amp; Woolls 3-6 6-4 7-5 from a set down &mdash; a result that decided sixth place, denied their opponents a climb, and handed L. Brown &amp; Hurst a reprieve they had no right to expect. Seven points from seven, seventh at 100.0%, and a season that spent three months as this page's designated hard-luck story finishing with back-to-back wins and a set difference improved from minus thirteen to minus nine. Sixth was never quite on. But for a team that had one set to its name in June and finished with six, the last fortnight has been a small vindication, and Browns Bets is glad to have been wrong.</div>
+    </div>
+  </div>
+
+  <!-- 8. A. Warner & M. Hughes -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">8th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">A. Warner &amp; M. Hughes</div>
+      <div class="odds-meta">0 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 8th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">It is done, and it is complete. 1-6 4-6 1-6 to S. Brown &amp; Jones closes a season of seven matches, seven defeats, every one 0-3: no points, no sets in twenty-one attempts, and a game difference of minus eighty-eight. Eighth at 100.0%, which it has been for a week and would have been sooner had the model been less polite. The full ledger, in order of arrival: L. Brown &amp; Hurst, Parry &amp; Woolls, Fitzgerald &amp; Hayes, Woolls &amp; Pengilly, Lindenburn &amp; Gatt (1-6 1-6 0-6), Tiley &amp; Penny and S. Brown &amp; Jones. Browns Bets suggested a fortnight ago that a pointless, setless season would be the first either division had recorded. That is no longer true: T. Saunders &amp; O. Barrass have gone and done exactly the same thing in League B, also finishing 0 from 7 with 0 sets. There is a certain symmetry in it, and no comfort whatsoever.</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">League B</div>
+
+  <!-- 1. L. Woolls & S. Grabham -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge fav">1st</div>
+      <div class="odds-badge-label fav">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">L. Woolls &amp; S. Grabham</div>
+      <div class="odds-meta">19 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 1st in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill fav" style="width:100.0%"></div></div>
+      <div class="odds-comment">The instruction was a 3-0 by eleven clear games. They won 6-3 6-1 6-1 &mdash; eighteen games to five, a margin of thirteen &mdash; and are champions of League B by two games. Nineteen points each, set difference identical at plus thirteen, and a game difference of plus fifty-eight against Davies &amp; Abbers' plus fifty-six. Browns Bets has spent four updates describing this as the tie-break talking, and the tie-break has now spoken. Six wins from seven: Bishop &amp; Morgan, Davies &amp; Abbers (2-1, 6-1 6-3 3-6), Farnham &amp; Brown (2-1, 6-3 4-6 7-5, the match of the season), Tatchell &amp; Davies, Saunders &amp; Barrass and Warwick &amp; Rees, against a single 1-2 to O'Neill &amp; Murphy. In from 19% to 100.0% for first, which is not a projection any more but a result. Nothing left to play, and nothing left to want.</div>
+    </div>
+  </div>
+
+  <!-- 2. L. Davies & G. Abbers -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge fav">2nd</div>
+      <div class="odds-badge-label fav">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">L. Davies &amp; G. Abbers</div>
+      <div class="odds-meta">19 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 2nd in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill fav" style="width:100.0%"></div></div>
+      <div class="odds-comment">Two games. Nineteen points each, set difference level at plus thirteen, and the league lost on a game difference of plus fifty-six to plus fifty-eight &mdash; Woolls &amp; Grabham needed a 3-0 by eleven clear games against Warwick &amp; Rees and took it by thirteen. This team did not play and could do nothing about it. The season deserved better than that footnote: six wins from seven, Warwick &amp; Rees (6-3 6-1 6-1), Bishop &amp; Morgan (2-1), O'Neill &amp; Murphy (2-1, 6-1 6-2 3-6), Tatchell &amp; Davies (6-1 6-2 6-3), Saunders &amp; Barrass (6-1 6-0 6-1) and Farnham &amp; Brown in the title decider (6-3 6-3 6-4), the only defeat a 1-2 to the eventual champions that carried a bonus point. Out from 80.7% to 100.0% for second, a sentence that reads oddly and means finality. Nothing left to play. Second, by the width of two games, having led the division for most of the summer.</div>
+    </div>
+  </div>
+
+  <!-- 3. C. O'Neill & J. Murphy -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">3rd</div>
+      <div class="odds-badge-label">50.2%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">C. O'Neill &amp; J. Murphy</div>
+      <div class="odds-meta">14 pts &nbsp;·&nbsp; 6 played &nbsp;·&nbsp; finishes 3rd in 50.2% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:50.2%"></div></div>
+      <div class="odds-comment">Idle again, and now the last man standing with something to win. The four wins stand &mdash; Woolls &amp; Grabham (2-1, 2-6 7-6 6-2, and it remains the only defeat the champions suffered all season), Saunders &amp; Barrass (3-0), Bishop &amp; Morgan (7-6 7-5 6-0) and Warwick &amp; Rees (7-6 3-6 6-2) &mdash; with bonus points from both 1-2s, to Tatchell &amp; Davies and to Davies &amp; Abbers (1-6 2-6 6-3). Fourteen points, third on the table, one point ahead of Farnham &amp; Brown and one fixture left, against precisely them. Everything else in League B is now settled: the title, second, fifth, sixth, seventh and eighth all decided. This is the last unplayed match in the division and the last question in it. Third 50.2%, fourth 49.8% &mdash; and the model has now come down on either side of this line on three separate occasions, which tells you precisely nothing except that it cannot separate the two. Browns Bets is content not to. Win and it is third; lose and it is fourth. There is no third option, which is fitting.</div>
+    </div>
+  </div>
+
+  <!-- 4. B. Farnham & S. Brown -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">4th</div>
+      <div class="odds-badge-label">50.2%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">B. Farnham &amp; S. Brown</div>
+      <div class="odds-meta">13 pts &nbsp;·&nbsp; 6 played &nbsp;·&nbsp; finishes 4th in 50.2% of sims &nbsp;·&nbsp; <em>different S. Brown to League A</em></div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:50.2%"></div></div>
+      <div class="odds-comment">Idle, and the badge has flipped to fourth &mdash; not because anything went wrong here, but because the model now has almost nothing left to be uncertain about and has split the last live question straight down the middle. The record: four wins from six, Saunders &amp; Barrass 3-0 (6-1 6-1 6-5), then 2-1s over Warwick &amp; Rees (6-2 6-4 2-6), Bishop &amp; Morgan (6-3 3-6 6-1) and Tatchell &amp; Davies (6-4 6-2 4-6), with a 1-2 to Woolls &amp; Grabham (3-6 6-4 5-7, the match of the season) and a 0-3 to Davies &amp; Abbers (3-6 3-6 4-6) in the title decider. Thirteen points, fourth on the table, a point behind O'Neill &amp; Murphy with the two of them due to meet in the last fixture either will play. Fourth 50.2%, third 49.8% &mdash; a coin balanced on its edge, tipping a different way each time it is asked. Read nothing into it: the gap has never exceeded four-tenths of a per cent in either direction, and the only honest reading is that these two are inseparable until they play. Win and third is theirs. Any other result and this is where it ends.</div>
+    </div>
+  </div>
+
+  <!-- 5. T. Warwick & N. Rees -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge mid">5th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">T. Warwick &amp; N. Rees</div>
+      <div class="odds-meta">11 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 5th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill mid" style="width:100.0%"></div></div>
+      <div class="odds-comment">The fixture described here as worth nothing to anybody turned out to be worth three points and a place: 6-3 6-4 6-3 over Saunders &amp; Barrass, a comfortable close to the season and enough to settle fifth beyond argument. Eleven points from seven, set difference back to minus one, and fifth locked at 100.0% &mdash; three clear of Bishop &amp; Morgan, who had been within a set of them. The season: 0-3 to Davies &amp; Abbers, 1-2 to Farnham &amp; Brown with the bonus, 2-1 over Tatchell &amp; Davies (6-3 5-7 6-4), 3-0 over Bishop &amp; Morgan (6-1 6-0 6-1), 1-2 to O'Neill &amp; Murphy with the bonus, 0-3 to the champions and this. Along the way they lost heavily enough to Woolls &amp; Grabham to hand them the title on game difference, which remains the most consequential thing any mid-table team did all summer.</div>
+    </div>
+  </div>
+
+  <!-- 6. D. Bishop & H. Morgan -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">6th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">D. Bishop &amp; H. Morgan</div>
+      <div class="odds-meta">8 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 6th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">Told to win it well, and they did &mdash; 6-2 6-3 6-2 over Saunders &amp; Barrass, seven games conceded, the tidiest afternoon of their season. Eight points from seven, sixth on the table and sixth at 100.0%, the 12% chance of catching Warwick &amp; Rees extinguished when Warwick beat the same opponents to move three points clear. Two wins on the year, both 3-0, both against the teams that finished beneath them (Tatchell &amp; Davies 6-1 6-2 6-3), with bonus points from the 1-2s against Davies &amp; Abbers and Farnham &amp; Brown. A set difference hauled from minus eight to minus five in the final week was enough to climb one place and no further. Nothing left to play, and sixth is where it settles.</div>
+    </div>
+  </div>
+
+  <!-- 7. M. Tatchell & H. Davies -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">7th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">M. Tatchell &amp; H. Davies</div>
+      <div class="odds-meta">8 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 7th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">Seventh, settled, and settled by other people. Bishop &amp; Morgan's 3-0 over Saunders &amp; Barrass took them past this side on set difference, minus five against minus seven, and Warwick &amp; Rees then won as well to leave all three eight-point questions answered without this team lifting a racket. A 2-1 over O'Neill &amp; Murphy (0-6 6-4 8-6) and a 3-0 over Saunders &amp; Barrass were the whole of the good times; five straight defeats closed the campaign, the last a 0-3 to Davies &amp; Abbers (1-6 2-6 3-6). Seventh at 100.0%. Three teams finished within reach of each other on points and this one finishes last of them, having sat above both at various points in the summer.</div>
+    </div>
+  </div>
+
+  <!-- 8. T. Saunders & O. Barrass -->
+  <div class="odds-card">
+    <div class="odds-badge-wrap">
+      <div class="odds-badge dead">8th</div>
+      <div class="odds-badge-label">100.0%</div>
+    </div>
+    <div class="odds-main">
+      <div class="odds-team-name">T. Saunders &amp; O. Barrass</div>
+      <div class="odds-meta">0 pts &nbsp;·&nbsp; 7 played &nbsp;·&nbsp; finishes 8th in 100.0% of sims</div>
+      <div class="odds-prob-bar"><div class="odds-prob-fill" style="width:100.0%"></div></div>
+      <div class="odds-comment">Seven games, seven defeats, every one of them 0-3: Farnham &amp; Brown, Tatchell &amp; Davies, O'Neill &amp; Murphy, Davies &amp; Abbers, Woolls &amp; Grabham (1-6 0-6 3-6), Bishop &amp; Morgan (2-6 3-6 2-6) and Warwick &amp; Rees (3-6 4-6 3-6). No points, no sets in twenty-one attempts, a game difference of minus eighty-three, and a season now complete. Eighth at 100.0%. The one consolation available &mdash; and it is a thin one &mdash; is that A. Warner &amp; M. Hughes have finished League A with precisely the same line: played seven, lost seven, no points, no sets. Two divisions, two identical seasons, and the only statistic either side will want to forget is the one they share.</div>
+    </div>
+  </div>
+
+  <div class="methodology-note">
+    📊 <strong>Methodology:</strong> 50,000 Monte Carlo simulations. Each team is assigned a win probability from its current win rate with Laplace smoothing (so teams with few games played aren't treated as unbeatable or hopeless). Every unplayed fixture is resolved probabilistically, each win split 60/40 between 3-0 and 2-1 scorelines, with games modelled so that game difference stays meaningful. Points are tallied under standard league rules (3 for a win, 1 bonus for losing 2-1) and the final table sorted on the same tie-breaks as the standings: points, then set difference, then game difference. Because two teams cannot occupy the same place, the projected table is resolved as an assignment problem &mdash; the model selects the arrangement of all eight teams that is jointly most likely, so every position is filled exactly once. A team's badge may therefore sit one place away from its own single most likely finish. The percentage and bar show how often that exact position came up: a high number means a confident projection, not a good one. Updated after each round of results. For entertainment only &mdash; not financial advice.
+  </div>
+
+</div>
+
+<div class="footer">Tondu Padel League 2026</div>
+
+<!-- ─── SCORE DATA (mirror of scores-v2.csv) ───────────────────────────────────
+     This block is the data source for the page. To update results, edit the
+     matching row in scores-v2.csv and paste the full CSV back in here (or ask
+     Claude to regenerate). Columns:
+     league,round,week_commencing,match,home_team,away_team,
+     s1_home_games,s1_away_games,s2_home_games,s2_away_games,
+     s3_home_games,s3_away_games,home_sets,away_sets
+     Games are the source of truth: when per-set games are entered, the set
+     result and points are computed from them. The home_sets/away_sets columns
+     are a fallback only for matches logged without game detail (e.g. walkovers).
+─────────────────────────────────────────────────────────────────────────────── -->
+<script type="text/csv" id="csv-data">
+league,round,week_commencing,match,home_team,away_team,s1_home_games,s1_away_games,s2_home_games,s2_away_games,s3_home_games,s3_away_games,home_sets,away_sets
+A,1,08-Jun-26,1,C. Woolls & O. Pengilly,G. Lindenburn & J. Gatt,1,6,3,6,2,6,0,3
+A,1,08-Jun-26,2,A. Warner & M. Hughes,L. Brown & J. Hurst,1,6,3,6,2,6,0,3
+A,1,08-Jun-26,3,D. Fitzgerald & M. Hayes,J. Tiley & M. Penny,6,0,6,1,6,0,3,0
+A,1,08-Jun-26,4,S. Brown & M. Jones,D. Parry & T. Woolls,6,0,6,5,6,3,3,0
+A,2,15-Jun-26,1,C. Woolls & O. Pengilly,L. Brown & J. Hurst,6,1,6,2,6,1,3,0
+A,2,15-Jun-26,2,G. Lindenburn & J. Gatt,J. Tiley & M. Penny,6,2,6,1,6,1,3,0
+A,2,15-Jun-26,3,A. Warner & M. Hughes,D. Parry & T. Woolls,2,6,1,6,4,6,0,3
+A,2,15-Jun-26,4,D. Fitzgerald & M. Hayes,S. Brown & M. Jones,6,1,7,6,6,1,3,0
+A,3,22-Jun-26,1,C. Woolls & O. Pengilly,J. Tiley & M. Penny,6,1,6,0,6,4,3,0
+A,3,22-Jun-26,2,L. Brown & J. Hurst,D. Parry & T. Woolls,1,6,7,6,9,7,2,1
+A,3,22-Jun-26,3,G. Lindenburn & J. Gatt,S. Brown & M. Jones,6,0,6,1,6,1,3,0
+A,3,22-Jun-26,4,A. Warner & M. Hughes,D. Fitzgerald & M. Hayes,0,6,5,7,2,6,0,3
+A,4,29-Jun-26,1,C. Woolls & O. Pengilly,D. Parry & T. Woolls,2,6,3,6,6,4,1,2
+A,4,29-Jun-26,2,J. Tiley & M. Penny,S. Brown & M. Jones,4,6,4,6,0,6,0,3
+A,4,29-Jun-26,3,L. Brown & J. Hurst,D. Fitzgerald & M. Hayes,6,7,2,6,6,7,0,3
+A,4,29-Jun-26,4,G. Lindenburn & J. Gatt,A. Warner & M. Hughes,6,1,6,1,6,0,3,0
+A,5,06-Jul-26,1,C. Woolls & O. Pengilly,S. Brown & M. Jones,7,5,6,2,7,5,3,0
+A,5,06-Jul-26,2,D. Parry & T. Woolls,D. Fitzgerald & M. Hayes,2,6,0,6,4,6,0,3
+A,5,06-Jul-26,3,J. Tiley & M. Penny,A. Warner & M. Hughes,6,3,6,3,6,2,3,0
+A,5,06-Jul-26,4,L. Brown & J. Hurst,G. Lindenburn & J. Gatt,0,6,1,6,2,6,0,3
+A,6,13-Jul-26,1,C. Woolls & O. Pengilly,D. Fitzgerald & M. Hayes,2,6,0,6,3,6,0,3
+A,6,13-Jul-26,2,S. Brown & M. Jones,A. Warner & M. Hughes,6,1,6,4,6,1,3,0
+A,6,13-Jul-26,3,D. Parry & T. Woolls,G. Lindenburn & J. Gatt,0,6,1,6,1,6,0,3
+A,6,13-Jul-26,4,J. Tiley & M. Penny,L. Brown & J. Hurst,1,6,6,3,2,6,1,2
+A,7,20-Jul-26,1,C. Woolls & O. Pengilly,A. Warner & M. Hughes,6,1,6,1,6,1,3,0
+A,7,20-Jul-26,2,D. Fitzgerald & M. Hayes,G. Lindenburn & J. Gatt,3,6,6,7,4,6,0,3
+A,7,20-Jul-26,3,S. Brown & M. Jones,L. Brown & J. Hurst,6,0,5,7,6,1,2,1
+A,7,20-Jul-26,4,D. Parry & T. Woolls,J. Tiley & M. Penny,6,3,4,6,5,7,1,2
+B,1,08-Jun-26,1,C. O'Neill & J. Murphy,M. Tatchell & H. Davies,6,0,4,6,6,8,1,2
+B,1,08-Jun-26,2,D. Bishop & H. Morgan,L. Woolls & S. Grabham,0,6,4,6,3,6,0,3
+B,1,08-Jun-26,3,B. Farnham & S. Brown,T. Saunders & O. Barrass,6,1,6,1,6,5,3,0
+B,1,08-Jun-26,4,T. Warwick & N. Rees,L. Davies & G. Abbers,3,6,1,6,1,6,0,3
+B,2,15-Jun-26,1,C. O'Neill & J. Murphy,L. Woolls & S. Grabham,2,6,7,6,6,2,2,1
+B,2,15-Jun-26,2,M. Tatchell & H. Davies,T. Saunders & O. Barrass,6,4,6,3,6,2,3,0
+B,2,15-Jun-26,3,D. Bishop & H. Morgan,L. Davies & G. Abbers,1,6,3,6,6,4,1,2
+B,2,15-Jun-26,4,B. Farnham & S. Brown,T. Warwick & N. Rees,6,2,6,4,2,6,2,1
+B,3,22-Jun-26,1,C. O'Neill & J. Murphy,T. Saunders & O. Barrass,6,1,6,1,6,2,3,0
+B,3,22-Jun-26,2,L. Woolls & S. Grabham,L. Davies & G. Abbers,6,1,6,3,3,6,2,1
+B,3,22-Jun-26,3,M. Tatchell & H. Davies,T. Warwick & N. Rees,3,6,7,5,4,6,1,2
+B,3,22-Jun-26,4,D. Bishop & H. Morgan,B. Farnham & S. Brown,3,6,6,3,1,6,1,2
+B,4,29-Jun-26,1,C. O'Neill & J. Murphy,L. Davies & G. Abbers,1,6,2,6,6,3,1,2
+B,4,29-Jun-26,2,T. Saunders & O. Barrass,T. Warwick & N. Rees,3,6,4,6,3,6,0,3
+B,4,29-Jun-26,3,L. Woolls & S. Grabham,B. Farnham & S. Brown,6,3,4,6,7,5,2,1
+B,4,29-Jun-26,4,M. Tatchell & H. Davies,D. Bishop & H. Morgan,1,6,2,6,3,6,0,3
+B,5,06-Jul-26,1,C. O'Neill & J. Murphy,T. Warwick & N. Rees,7,6,3,6,6,2,2,1
+B,5,06-Jul-26,2,L. Davies & G. Abbers,B. Farnham & S. Brown,6,3,6,3,6,4,3,0
+B,5,06-Jul-26,3,T. Saunders & O. Barrass,D. Bishop & H. Morgan,2,6,3,6,2,6,0,3
+B,5,06-Jul-26,4,L. Woolls & S. Grabham,M. Tatchell & H. Davies,6,2,6,1,6,2,3,0
+B,6,13-Jul-26,1,C. O'Neill & J. Murphy,B. Farnham & S. Brown,,,,,,,,
+B,6,13-Jul-26,2,T. Warwick & N. Rees,D. Bishop & H. Morgan,6,1,6,0,6,1,3,0
+B,6,13-Jul-26,3,L. Davies & G. Abbers,M. Tatchell & H. Davies,6,1,6,2,6,3,3,0
+B,6,13-Jul-26,4,T. Saunders & O. Barrass,L. Woolls & S. Grabham,1,6,0,6,3,6,0,3
+B,7,20-Jul-26,1,C. O'Neill & J. Murphy,D. Bishop & H. Morgan,7,6,7,5,6,0,3,0
+B,7,20-Jul-26,2,B. Farnham & S. Brown,M. Tatchell & H. Davies,6,4,6,2,4,6,2,1
+B,7,20-Jul-26,3,T. Warwick & N. Rees,L. Woolls & S. Grabham,3,6,1,6,1,6,0,3
+B,7,20-Jul-26,4,L. Davies & G. Abbers,T. Saunders & O. Barrass,6,1,6,0,6,1,3,0
+</script>
+
+<script>
+// ─── Parse embedded CSV ───────────────────────────────────────────────────────
+function parseCSV() {
+  const raw = document.getElementById('csv-data').textContent.trim();
+  const lines = raw.split('\n').filter(l => l.trim() !== '');
+  const headers = lines[0].split(',');
+  return lines.slice(1).map(line => {
+    const cells = line.split(',');
+    const o = {};
+    headers.forEach((h, i) => o[h.trim()] = (cells[i] || '').trim());
+    return o;
+  });
+}
+
+const ROWS = parseCSV();
+
+// Format "08-Jun-26" -> "w/c 8 Jun 2026"
+function weekLabel(w) {
+  const m = /^(\d{2})-([A-Za-z]{3})-(\d{2})$/.exec(w);
+  if (!m) return w;
+  return `w/c ${parseInt(m[1], 10)} ${m[2]} 20${m[3]}`;
+}
+
+const num = v => (v === '' || v == null) ? null : parseInt(v, 10);
+
+// Resolve a match row into a structured result.
+function resolveMatch(r) {
+  const sets = [
+    [num(r.s1_home_games), num(r.s1_away_games)],
+    [num(r.s2_home_games), num(r.s2_away_games)],
+    [num(r.s3_home_games), num(r.s3_away_games)]
+  ].filter(s => s[0] !== null && s[1] !== null);
+
+  const hasGames = sets.length > 0;
+  const totH = num(r.home_sets), totA = num(r.away_sets);
+  const hasTotals = totH !== null && totA !== null;
+
+  let setsH = 0, setsA = 0, gamesH = 0, gamesA = 0;
+  if (hasGames) {
+    sets.forEach(([h, a]) => {
+      gamesH += h; gamesA += a;
+      if (h > a) setsH++; else if (a > h) setsA++;
+    });
+  } else if (hasTotals) {
+    setsH = totH; setsA = totA;
+  }
+
+  const played = hasGames ? (setsH + setsA >= 2) : hasTotals;
+
+  // Flag if entered totals disagree with games-derived sets
+  const mismatch = hasGames && hasTotals && (totH !== setsH || totA !== setsA);
+
+  return { sets, hasGames, played, setsH, setsA, gamesH, gamesA, mismatch };
+}
+
+// ─── Build league structures from CSV ─────────────────────────────────────────
+function buildLeague(letter) {
+  const rows = ROWS.filter(r => r.league.toUpperCase() === letter.toUpperCase());
+  const teams = [];
+  rows.forEach(r => {
+    [r.home_team, r.away_team].forEach(t => { if (!teams.includes(t)) teams.push(t); });
+  });
+  const roundsMap = {};
+  rows.forEach(r => {
+    const ri = parseInt(r.round, 10);
+    (roundsMap[ri] = roundsMap[ri] || { round: ri, week: r.week_commencing, matches: [] }).matches.push(r);
+  });
+  const rounds = Object.values(roundsMap).sort((a, b) => a.round - b.round);
+  rounds.forEach(rd => rd.matches.sort((a, b) => parseInt(a.match, 10) - parseInt(b.match, 10)));
+  return { teams, rounds, rows };
+}
+
+const LEAGUES = { a: buildLeague('A'), b: buildLeague('B') };
+
+// ─── Standings ────────────────────────────────────────────────────────────────
+function calcTable(key) {
+  const L = LEAGUES[key];
+  const stats = {};
+  L.teams.forEach(t => stats[t] = { team: t, P: 0, W: 0, L: 0, BP: 0, SF: 0, SA: 0, GF: 0, GA: 0, Pts: 0 });
+
+  L.rows.forEach(r => {
+    const m = resolveMatch(r);
+    if (!m.played) return;
+    const h = r.home_team, a = r.away_team;
+    stats[h].P++; stats[a].P++;
+    stats[h].SF += m.setsH; stats[h].SA += m.setsA;
+    stats[a].SF += m.setsA; stats[a].SA += m.setsH;
+    stats[h].GF += m.gamesH; stats[h].GA += m.gamesA;
+    stats[a].GF += m.gamesA; stats[a].GA += m.gamesH;
+
+    if (m.setsH > m.setsA) {
+      stats[h].W++; stats[h].Pts += 3; stats[a].L++;
+      if (m.setsA === 1) { stats[a].Pts += 1; stats[a].BP++; }
+    } else {
+      stats[a].W++; stats[a].Pts += 3; stats[h].L++;
+      if (m.setsH === 1) { stats[h].Pts += 1; stats[h].BP++; }
+    }
+  });
+
+  return Object.values(stats).sort((x, y) => {
+    if (y.Pts !== x.Pts) return y.Pts - x.Pts;
+    const xSD = x.SF - x.SA, ySD = y.SF - y.SA;
+    if (ySD !== xSD) return ySD - xSD;
+    const xGD = x.GF - x.GA, yGD = y.GF - y.GA;
+    if (yGD !== xGD) return yGD - xGD;
+    if (y.GF !== x.GF) return y.GF - x.GF;
+    return x.team.localeCompare(y.team);
+  });
+}
+
+function renderTable(key) {
+  const rows = calcTable(key);
+  const anyPlayed = rows.some(r => r.P > 0);
+  document.getElementById(`table-${key}`).innerHTML = `
+    <thead><tr>
+      <th class="col-pos">#</th>
+      <th class="col-team">Team</th>
+      <th title="Played">P</th><th title="Won">W</th><th title="Lost">L</th>
+      <th title="Losing bonus points">BP</th>
+      <th title="Sets for">SF</th><th title="Sets against">SA</th><th title="Set difference">SD</th>
+      <th title="Game difference">GD</th>
+      <th class="col-pts">Pts</th>
+    </tr></thead>
+    <tbody>
+      ${rows.map((r, i) => `
+        <tr class="${anyPlayed ? 'played-some' : ''}">
+          <td class="col-pos">${i + 1}</td>
+          <td class="col-team">${r.team}</td>
+          <td>${r.P}</td><td>${r.W}</td><td>${r.L}</td><td>${r.BP}</td>
+          <td>${r.SF}</td><td>${r.SA}</td><td>${fmtDiff(r.SF - r.SA)}</td>
+          <td>${fmtDiff(r.GF - r.GA)}</td>
+          <td class="col-pts">${r.Pts}</td>
+        </tr>`).join('')}
+    </tbody>`;
+}
+
+function fmtDiff(n) { return n > 0 ? `+${n}` : `${n}`; }
+
+// ─── Fixtures (scoreboard) ────────────────────────────────────────────────────
+function teamRow(name, sets, side, isWinner, agg, showAgg) {
+  const cells = [0, 1, 2].map(i => {
+    if (!sets[i]) return `<span class="sb-set"></span>`;
+    const my = side === 'home' ? sets[i][0] : sets[i][1];
+    const opp = side === 'home' ? sets[i][1] : sets[i][0];
+    return `<span class="sb-set ${my > opp ? 'win' : ''}">${my}</span>`;
+  }).join('');
+  return `
+    <div class="sb-row">
+      <div class="sb-name ${isWinner ? 'win' : ''}">${name}</div>
+      <div class="sb-sets">${cells}</div>
+      <div class="sb-agg">${showAgg ? agg : ''}</div>
+    </div>`;
+}
+
+function renderFixtures(key) {
+  const L = LEAGUES[key];
+  const container = document.getElementById(`fixtures-${key}`);
+  container.innerHTML = '';
+
+  L.rounds.forEach(rd => {
+    const matchesHTML = rd.matches.map(r => {
+      const m = resolveMatch(r);
+      const warn = m.mismatch ? `<span class="warn" title="Entered set totals don't match the per-set games — page shows the games result">⚠</span>` : '';
+
+      if (!m.played) {
+        return `
+          <div class="match unplayed">
+            <div class="sb-row"><div class="sb-name">${r.home_team}</div><div></div><div></div></div>
+            <div class="vs-tag">vs</div>
+            <div class="sb-row"><div class="sb-name">${r.away_team}</div><div></div><div></div></div>
+          </div>`;
+      }
+
+      const homeWon = m.setsH > m.setsA;
+      return `
+        <div class="match">
+          ${teamRow(r.home_team + warn, m.sets, 'home', homeWon, m.setsH, true)}
+          ${teamRow(r.away_team, m.sets, 'away', !homeWon, m.setsA, true)}
+        </div>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.className = 'round-card';
+    card.id = `round-${key}-${rd.round}`;
+    card.innerHTML = `
+      <div class="round-header" onclick="toggleRound('${key}',${rd.round})">
+        <h3>Round ${rd.round}</h3>
+        <span class="week-label">${weekLabel(rd.week)}</span>
+        <span class="round-toggle">▾</span>
+      </div>
+      <div class="round-body">${matchesHTML}</div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleRound(key, ri) {
+  document.getElementById(`round-${key}-${ri}`).classList.toggle('collapsed');
+}
+
+function showTab(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="showTab('${key}')"]`).classList.add('active');
+  document.getElementById(`tab-${key}`).classList.add('active');
+}
+
+['a', 'b'].forEach(key => { renderFixtures(key); renderTable(key); });
+</script>
+</body>
+</html>
